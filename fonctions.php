@@ -49,7 +49,7 @@ function getClientById($connexion, $identifiant)
 function getTousLesClients($connexion)
 {
     //On prépare la requête qui retournera tous les clients de la bdd
-    $req = $connexion->prepare("SELECT * FROM \"webServiceEdf\".client ;");
+    $req = $connexion->prepare("SELECT * FROM \"webServiceEdf\".client ORDER BY nom;");
     
     //On exécute la requête
     $r = $req->execute();
@@ -77,35 +77,24 @@ function getTousLesClients($connexion)
 /**
  * Modifie le client correspondant à la chaîne JSON passée en paramètres et le retourne sous forme de chaîne encodée en JSON
  * @param PDO::Connection La variable contenant la connexion à la bdd
- * @param JSONObject L'objet JSON correspondant au client à modifier
+ * @param [Array] ['identifiant', 'ancienReleve', 'dateAncienReleve', 'situation', 'signatureBase64']
+ * @return String Les données du client sous forme de chaîne encodée en JSON
  * @throws Exception
  */
-function setClient($connexion, $jsonClient)
+function setClient($connexion, $arrValeurs)
 {
     //On prépare la requête
     $req = $connexion->prepare("UPDATE \"webServiceEdf\".client set "
-                                . "nom=:nom, prenom=:prenom, adresse=:adresse, cp=:cp, "
-                                . "ville=:ville, tel=:tel, idcompteur=:idcompteur, "
                                 . "dateancienreleve=:dateancienreleve, ancienreleve=:ancienreleve,"
-                                . "datedernierreleve=:datedernierreleve, dernierreleve=:dernierreleve, "
                                 . "signaturebase64=:signaturebase64, situation=:situation "
                                 . "WHERE identifiant=:identifiant ;");
     
     //On renseigne les paramètres de la requête préparée
-    $req->bindParam(':nom', $jsonClient->{'nom'});
-    $req->bindParam(':prenom', $jsonClient->{'prenom'});
-    $req->bindParam(':adresse', $jsonClient->{'adresse'});
-    $req->bindParam(':cp', $jsonClient->{'cp'});
-    $req->bindParam(':ville', $jsonClient->{'ville'});
-    $req->bindParam(':tel', $jsonClient->{'tel'});
-    $req->bindParam(':idcompteur', $jsonClient->{'idcompteur'});
-    $req->bindParam(':dateancienreleve', $jsonClient->{'dateancienreleve'});
-    $req->bindParam(':ancienreleve', $jsonClient->{'ancienreleve'});
-    $req->bindParam(':datedernierreleve', $jsonClient->{'datedernierreleve'});
-    $req->bindParam(':dernierreleve', $jsonClient->{'dernierreleve'});
-    $req->bindParam(':signaturebase64', $jsonClient->{'signaturebase64'});
-    $req->bindParam(':situation', $jsonClient->{'situation'});
-    $req->bindParam(':identifiant', $jsonClient->{'identifiant'});
+    $req->bindParam(':identifiant', $arrValeurs[0]);
+    $req->bindParam(':ancienreleve', $arrValeurs[1]);
+    $req->bindParam(':dateancienreleve', $arrValeurs[2]);
+    $req->bindParam(':situation', $arrValeurs[3]);
+    $req->bindParam(':signaturebase64', $arrValeurs[4]);
     
     //On exécute la requête
     $r = $req->execute();
@@ -113,9 +102,9 @@ function setClient($connexion, $jsonClient)
     //Si l'exécution de la requête retourne FALSE, on lève une exception car la requête ne s'est pas exécutée normalement
     if(!$r)
     {
-        throw new Exception("Impossible de modifier le client : ".$jsonClient->{'identifiant'}. " - ".$req->queryString);
+        throw new Exception("Impossible de modifier le client : ".$arrValeurs[0]. " - ".$req->queryString);
     }//fin if
     
     //On récupère le client modifié en base de données et on le retourne sous forme de chaîne encodée en JSON
-    return getClientById($connexion, $jsonClient->{'identifiant'});
+    return getClientById($connexion, $arrValeurs[0]);
 }//fin setClient

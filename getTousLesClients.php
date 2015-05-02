@@ -2,7 +2,7 @@
 include "./BddConnexion.php";
 include "./fonctions.php";
 
-try{
+try {
     //On établit la connexion
     $connexion = getConnexion();
 
